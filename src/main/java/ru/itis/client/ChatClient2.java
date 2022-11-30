@@ -14,7 +14,7 @@ public class ChatClient2 {
         while (true){
             System.out.print("¬ведите сообщение: ");
             String message = sc.nextLine();
-            chatProcessor.sendMessage(message);
+            //chatProcessor.sendMessage(message);
         }
     }
 }

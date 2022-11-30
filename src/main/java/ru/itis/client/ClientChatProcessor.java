@@ -1,5 +1,11 @@
 package ru.itis.client;
 
+import ru.itis.protocol.exceptions.MessageTypeException;
+import ru.itis.protocol.exceptions.ProtocolHeaderException;
+import ru.itis.protocol.message.Message;
+import ru.itis.protocol.message.MessageInputStream;
+import ru.itis.protocol.message.MessageOutputStream;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,16 +15,14 @@ import java.net.Socket;
 public class ClientChatProcessor implements Runnable {
 
     private Socket socket;
-    private PrintWriter toServerWriter;
-    private BufferedReader fromServerReader;
+    private MessageOutputStream outputStream;
+    private MessageInputStream inputStream;
 
     public ClientChatProcessor(Socket socket) {
         this.socket = socket;
         try {
-            this.toServerWriter = new PrintWriter(socket.getOutputStream());
-            this.fromServerReader = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream())
-            );
+            this.outputStream = new MessageOutputStream(socket.getOutputStream());
+            this.inputStream = new MessageInputStream(socket.getInputStream());
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
@@ -26,30 +30,20 @@ public class ClientChatProcessor implements Runnable {
 
     @Override
     public void run() {
-        try(BufferedReader clientReader = new BufferedReader(
-                new InputStreamReader(socket.getInputStream())
-        )){
-            String clientMessage;
-            while ( (clientMessage = clientReader.readLine()) != null ){
-                System.out.println("\n\r" + clientMessage);
-            }
-        }catch (IOException e){
-            throw new IllegalArgumentException(e);
-        }
-        /*while (true) {
-            try {
-                String messageServer = fromServerReader.readLine();
-                if(messageServer != null){
-                    System.out.println("Пришло сообщение: " + messageServer);
-                }
-            } catch (IOException e) {
-                throw new IllegalArgumentException(e);
-            }
-        }*/
+//            try {
+//                Message clientMessage;
+//                while (inputStream.available() != 0){
+//                    System.out.println("поймал сообщение");
+//                    clientMessage = inputStream.getMessage();
+//                    System.out.println("Пришло сообщение: " + clientMessage);
+//                }
+//            } catch (IOException | ProtocolHeaderException | MessageTypeException e) {
+//                e.printStackTrace();
+//            }
     }
 
-    public void sendMessage(String message) throws IOException {
-        toServerWriter.println(message);
-        toServerWriter.flush();
+    public void sendMessage(Message message) throws IOException {
+        outputStream.writeMessage(message);
+        outputStream.flush();
     }
 }

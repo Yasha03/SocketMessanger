@@ -12,7 +12,8 @@ public class ChatServer {
         List<Socket> chatClients = new ArrayList<>();
         while(true) {
             Socket s = serverSocket.accept();
-            new Thread(new SocketChatProcessor(s, chatClients)).start();
+            System.out.println("поймал сокет");
+            new Thread(new ServerChatProcessor(s, chatClients)).start();
         }
     }
 }
