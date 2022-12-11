@@ -1,5 +1,6 @@
 package ru.itis.client;
 
+import ru.itis.client.controllers.MainController;
 import ru.itis.protocol.exceptions.MessageTypeException;
 import ru.itis.protocol.exceptions.ProtocolHeaderException;
 import ru.itis.protocol.message.Message;
@@ -17,12 +18,14 @@ public class ClientChatProcessor implements Runnable {
     private Socket socket;
     private MessageOutputStream outputStream;
     private MessageInputStream inputStream;
+    private MainController controller;
 
-    public ClientChatProcessor(Socket socket) {
+    public ClientChatProcessor(Socket socket, MainController controller) {
         this.socket = socket;
         try {
             this.outputStream = new MessageOutputStream(socket.getOutputStream());
             this.inputStream = new MessageInputStream(socket.getInputStream());
+            this.controller = controller;
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
@@ -30,16 +33,14 @@ public class ClientChatProcessor implements Runnable {
 
     @Override
     public void run() {
-//            try {
-//                Message clientMessage;
-//                while (inputStream.available() != 0){
-//                    System.out.println("поймал сообщение");
-//                    clientMessage = inputStream.getMessage();
-//                    System.out.println("Пришло сообщение: " + clientMessage);
-//                }
-//            } catch (IOException | ProtocolHeaderException | MessageTypeException e) {
-//                e.printStackTrace();
-//            }
+        try {
+            Message message;
+            while ((message = inputStream.getMessage()) != null) {
+                controller.onGetMessageListener(message);
+            }
+        } catch (IOException | ProtocolHeaderException | MessageTypeException e) {
+                e.printStackTrace();
+            }
     }
 
     public void sendMessage(Message message) throws IOException {

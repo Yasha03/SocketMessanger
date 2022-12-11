@@ -23,12 +23,17 @@ public class MessageOutputStream extends OutputStream {
 
         outputStream.write(message.getType());
 
-        byte[] data = message.getData();
-        outputStream.write((byte) (data.length >> 8));
-        outputStream.write((byte) (data.length));
+        if(message.getType() == MessageTypes.DEFAULT_MESSAGE) {
+            byte[] data = message.getData();
+            outputStream.write((byte) (data.length >> 8));
+            outputStream.write((byte) (data.length));
 
-        for (int i = 0; i < data.length; i++) {
-            outputStream.write(data[i]);
+            for (int i = 0; i < data.length; i++) {
+                outputStream.write(data[i]);
+            }
+        }
+        if(message.getType() == MessageTypes.STICKER_MESSAGE){
+            outputStream.write(message.getData()[0]);
         }
         outputStream.flush();
     }

@@ -33,13 +33,17 @@ public class MessageInputStream extends InputStream {
         if (!MessageTypes.typeIsExist(type)) {
             throw new MessageTypeException("Unknown message type");
         }
+        byte[] messageData = new byte[0];
+        if(type == MessageTypes.DEFAULT_MESSAGE) {
+            int length = inputStream.read() << 8 | inputStream.read();
 
-        int length = inputStream.read() << 8 | inputStream.read();
+            messageData = new byte[length];
 
-        byte[] messageData = new byte[length];
-
-        for (int i = 0; i < length; i++) {
-            messageData[i] = (byte) inputStream.read();
+            for (int i = 0; i < length; i++) {
+                messageData[i] = (byte) inputStream.read();
+            }
+        }else if(type == MessageTypes.STICKER_MESSAGE){
+            messageData = new byte[]{(byte) inputStream.read()};
         }
 
         return Message.builder()

@@ -4,12 +4,15 @@ import ru.itis.protocol.exceptions.MessageTypeException;
 import ru.itis.protocol.exceptions.ProtocolHeaderException;
 import ru.itis.protocol.message.Message;
 import ru.itis.protocol.message.MessageInputStream;
+import ru.itis.protocol.message.MessageOutputStream;
+import ru.itis.protocol.message.MessageTypes;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class ServerChatProcessor implements Runnable{
+public class ServerChatProcessor implements Runnable {
 
     private final Socket socket;
     private final MessageInputStream inputStream;
@@ -27,20 +30,25 @@ public class ServerChatProcessor implements Runnable{
         startChat();
     }
 
-    public void startChat(){
+    public void startChat() {
         try {
             Message message;
-            while ( (message = inputStream.getMessage()) != null){
+            while ((message = inputStream.getMessage()) != null) {
                 System.out.println(socket.getPort() + ": " + message);
+                for (Socket client : chatClients) {
+                    MessageOutputStream toClientWriter = new MessageOutputStream(client.getOutputStream());
+                    if (message.getType() == MessageTypes.DEFAULT_MESSAGE) {
+                        toClientWriter.writeMessage(Message.builder()
+                                .type(message.getType())
+                                .data((socket.getPort() + ": "
+                                        + message.toString()).getBytes(StandardCharsets.UTF_16))
+                                .build());
+                    } else {
+                        toClientWriter.writeMessage(message);
+                    }
+                    toClientWriter.flush();
+                }
             }
-
-//            System.out.println(socket.getPort() + ": " + message);
-//            System.out.println("type: " + message.getType());
-//            for (Socket client : chatClients){
-//                PrintWriter toClientWriter = new PrintWriter(client.getOutputStream());
-//                toClientWriter.println("Пользователь " + socket.getPort() + " написал сообщение: " + message);
-//                toClientWriter.flush();
-//            }
         } catch (IOException e) {
             throw new IllegalArgumentException();
         } catch (ProtocolHeaderException e) {
